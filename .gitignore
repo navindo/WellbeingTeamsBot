@@ -1,0 +1,10 @@
+bin/
+obj/
+*.user
+*.suo
+*.db
+*.log
+*.tmp
+*.PublishSettings
+*.vscode/
+appsettings.*.json

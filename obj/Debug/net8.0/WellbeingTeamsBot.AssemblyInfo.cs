@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WellbeingTeamsBot")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d7a00d204ba48a8b3eb12c08da0ad53c16c789f9")]
 [assembly: System.Reflection.AssemblyProductAttribute("WellbeingTeamsBot")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WellbeingTeamsBot")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
