@@ -1,0 +1,66 @@
+[
+  {
+    "ContainingType": "WellbeingTeamsBot.Controllers.BotController",
+    "Method": "PostAsync",
+    "RelativePath": "api/messages",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "WellbeingTeamsBot.Controllers.NotificationController",
+    "Method": "SendAdaptiveCard",
+    "RelativePath": "api/notify",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WellbeingTeamsBot.Controllers.NotifyRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WellbeingTeamsBot.Controllers.UserSettingsController",
+    "Method": "GetSettings",
+    "RelativePath": "api/user/settings",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "objectId",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WellbeingTeamsBot.Controllers.UserSettingsController",
+    "Method": "UpdateSettings",
+    "RelativePath": "api/user/settings",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WellbeingTeamsBot.Controllers.UserSettingsUpdateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
