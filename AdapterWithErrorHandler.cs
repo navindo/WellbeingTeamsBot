@@ -2,6 +2,8 @@
 using Microsoft.Bot.Builder.TraceExtensions;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Logging;
+using System;
+using WellbeingTeamsBot.Services;
 
 namespace WellbeingTeamsBot
 {
@@ -12,12 +14,11 @@ namespace WellbeingTeamsBot
         {
             OnTurnError = async (turnContext, exception) =>
             {
-                logger.LogError(exception, $"Unhandled bot error: {exception.Message}");
+                var message = $"[AdapterWithErrorHandler] BOT ERROR: {exception.Message}\n{exception}";
+                ManualLogger.Log(message);
+                logger.LogError(exception, message);
 
-                // Trace for Bot Framework Emulator
                 await turnContext.TraceActivityAsync("OnTurnError Trace", exception.Message, "https://www.botframework.com/schemas/error", "TurnError");
-
-                // Optional: user-facing message
                 await turnContext.SendActivityAsync("Oops. Something went wrong in the bot.");
             };
         }

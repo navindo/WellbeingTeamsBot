@@ -83,3 +83,5 @@ C:\Users\admin\source\repos\WellbeingTeamsBot\WellbeingTeamsBot\obj\Release\net8
 C:\Users\admin\source\repos\WellbeingTeamsBot\WellbeingTeamsBot\obj\Release\net8.0\WellbeingTeamsBot.pdb
 C:\Users\admin\source\repos\WellbeingTeamsBot\WellbeingTeamsBot\obj\Release\net8.0\WellbeingTeamsBot.genruntimeconfig.cache
 C:\Users\admin\source\repos\WellbeingTeamsBot\WellbeingTeamsBot\obj\Release\net8.0\ref\WellbeingTeamsBot.dll
+C:\Users\admin\source\repos\WellbeingTeamsBot\WellbeingTeamsBot\obj\Release\net8.0\WellbeingTeamsBot.sourcelink.json
+C:\Users\admin\source\repos\WellbeingTeamsBot\WellbeingTeamsBot\bin\Release\net8.0\WellbeingTeamsBot.staticwebassets.runtime.json

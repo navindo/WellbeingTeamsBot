@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using WellbeingTeamsBot.Services;
 using WellbeingTeamsBot.Storage;
 
 namespace WellbeingTeamsBot.Controllers
@@ -19,7 +20,6 @@ namespace WellbeingTeamsBot.Controllers
             _logger = logger;
         }
 
-        // GET /api/user/settings?objectId=xxxx
         [HttpGet]
         public async Task<IActionResult> GetSettings([FromQuery] string objectId)
         {
@@ -28,6 +28,8 @@ namespace WellbeingTeamsBot.Controllers
 
             try
             {
+                ManualLogger.Log($"GET /api/user/settings called for objectId={objectId}");
+
                 var (enabled, snoozedUntil) = await _storageHelper.GetNotificationStatusAsync(objectId);
 
                 return Ok(new
@@ -40,11 +42,11 @@ namespace WellbeingTeamsBot.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving settings for user: {objectId}", objectId);
+                ManualLogger.Log($"[UserSettingsController] Error retrieving settings for {objectId}: {ex.Message}\n{ex.StackTrace}");
                 return StatusCode(500, "Failed to retrieve user settings.");
             }
         }
 
-        // POST /api/user/settings
         [HttpPost]
         public async Task<IActionResult> UpdateSettings([FromBody] UserSettingsUpdateRequest request)
         {
@@ -56,6 +58,8 @@ namespace WellbeingTeamsBot.Controllers
 
             try
             {
+                ManualLogger.Log($"POST /api/user/settings called to update objectId={request.ObjectId}, enabled={request.NotificationsEnabled}, snoozedUntil={request.SnoozedUntilUtc?.ToString("u") ?? "null"}");
+
                 await _storageHelper.UpdateNotificationStatusAsync(
                     request.ObjectId,
                     request.NotificationsEnabled,
@@ -67,6 +71,7 @@ namespace WellbeingTeamsBot.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating settings for user: {objectId}", request.ObjectId);
+                ManualLogger.Log($"[UserSettingsController] Error updating settings for {request.ObjectId}: {ex.Message}\n{ex.StackTrace}");
                 return StatusCode(500, "Failed to update user settings.");
             }
         }

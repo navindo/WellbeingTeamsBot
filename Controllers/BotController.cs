@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
+using WellbeingTeamsBot.Services;
+using System;
+using System.Threading.Tasks;
 
 namespace WellbeingTeamsBot.Controllers
 {
@@ -20,7 +23,17 @@ namespace WellbeingTeamsBot.Controllers
         [HttpPost]
         public async Task PostAsync()
         {
-            await _adapter.ProcessAsync(Request, Response, _bot);
+            ManualLogger.Log(">>> POST /api/messages received");
+
+            try
+            {
+                await _adapter.ProcessAsync(Request, Response, _bot);
+            }
+            catch (Exception ex)
+            {
+                ManualLogger.Log($"[BotController] ERROR in /api/messages: {ex.Message}\n{ex.StackTrace}");
+                throw;
+            }
         }
     }
 }

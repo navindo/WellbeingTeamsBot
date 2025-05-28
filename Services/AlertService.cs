@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
 using WellbeingTeamsBot.Storage;
+using WellbeingTeamsBot.Services;
 
 namespace WellbeingTeamsBot.Services
 {
@@ -31,31 +32,45 @@ namespace WellbeingTeamsBot.Services
 
         public async Task SendCardAsync(string objectId, JObject adaptiveCardJson)
         {
-            var reference = await _storageHelper.GetReferenceAsync(objectId);
-            if (reference == null)
+            try
             {
-                _logger.LogWarning("No conversation reference found for user {ObjectId}", objectId);
-                return;
-            }
+                ManualLogger.Log($"SendCardAsync invoked for objectId={objectId}");
 
-            var attachment = new Attachment
-            {
-                ContentType = "application/vnd.microsoft.card.adaptive",
-                Content = adaptiveCardJson
-            };
-
-            await _adapter.ContinueConversationAsync(
-                _appId,
-                reference,
-                async (context, token) =>
+                var reference = await _storageHelper.GetReferenceAsync(objectId);
+                if (reference == null)
                 {
-                    await context.SendActivityAsync(MessageFactory.Attachment(attachment));
-                },
-                default
-            );
+                    var msg = $"No conversation reference found for user {objectId}";
+                    _logger.LogWarning(msg);
+                    ManualLogger.Log(msg);
+                    return;
+                }
 
-            await _storageHelper.UpdateLastAlertSentAsync(objectId);
-            _logger.LogInformation("Card sent and alert time updated for user {ObjectId}", objectId);
+                var attachment = new Attachment
+                {
+                    ContentType = "application/vnd.microsoft.card.adaptive",
+                    Content = adaptiveCardJson
+                };
+
+                await _adapter.ContinueConversationAsync(
+                    _appId,
+                    reference,
+                    async (context, token) =>
+                    {
+                        await context.SendActivityAsync(MessageFactory.Attachment(attachment));
+                    },
+                    default
+                );
+
+                await _storageHelper.UpdateLastAlertSentAsync(objectId);
+                _logger.LogInformation("Card sent and alert time updated for user {ObjectId}", objectId);
+                ManualLogger.Log($"Card sent and alert time updated for user {objectId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send card for objectId={ObjectId}", objectId);
+                ManualLogger.Log($"[AlertService] ERROR for objectId={objectId}: {ex.Message}\n{ex.StackTrace}");
+                throw;
+            }
         }
     }
 }

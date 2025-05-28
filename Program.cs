@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Connector.Authentication;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using WellbeingTeamsBot;
 using WellbeingTeamsBot.Bots;
 using WellbeingTeamsBot.Services;
@@ -12,43 +12,48 @@ using WellbeingTeamsBot.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load appsettings.json
-builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-// Configure Logging
+// Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.AddDebug(); // Optional
+builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-// Register Bot Framework Authentication
+// Use configuration from Azure App Settings
+builder.Configuration.AddEnvironmentVariables();
+
+// Bot Authentication (relies on MicrosoftAppId and MicrosoftAppPassword from app settings)
 builder.Services.AddSingleton<BotFrameworkAuthentication, ConfigurationBotFrameworkAuthentication>();
 
-// Register Adapter with error handler
+// Adapter with error handling
 builder.Services.AddSingleton<CloudAdapter, AdapterWithErrorHandler>();
 builder.Services.AddSingleton<IBotFrameworkHttpAdapter>(sp => sp.GetRequiredService<CloudAdapter>());
 
-// Register Bot
+// Bot logic
 builder.Services.AddTransient<IBot, TeamsConversationBot>();
 
-// Register custom services
+// Custom services
 builder.Services.AddScoped<ISqlStorageHelper, SqlStorageHelper>();
 builder.Services.AddScoped<IAlertService, AlertService>();
 
-// Register MVC Controllers
+// Controllers
 builder.Services.AddControllers();
+
+// Manual logging initialization
+ManualLogger.Initialize(builder.Configuration);
 
 var app = builder.Build();
 
-//  Optional: Show stack traces in Dev mode
+// Developer exception page
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
 
-app.UseRouting();
-app.UseAuthorization(); // Optional
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
+app.UseRouting();
+app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
@@ -56,10 +61,11 @@ app.UseEndpoints(endpoints =>
 
 try
 {
+    ManualLogger.Log("Program.cs starting app...");
     app.Run();
 }
 catch (Exception ex)
 {
-    Console.WriteLine("Fatal error: " + ex.ToString());
+    ManualLogger.Log($"FATAL error in Program.cs: {ex.Message}\n{ex.StackTrace}");
     throw;
 }

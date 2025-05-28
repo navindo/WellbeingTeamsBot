@@ -7,6 +7,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using WellbeingTeamsBot.Storage;
+using WellbeingTeamsBot.Services;
 
 namespace WellbeingTeamsBot.Bots
 {
@@ -35,6 +36,7 @@ namespace WellbeingTeamsBot.Bots
             {
                 _logger.LogError(ex, "Failed to retrieve user profile from TeamsInfo.");
                 userId = turnContext.Activity.From?.Id ?? "unknown";
+                ManualLogger.Log($"[GetMemberAsync failed] FromId={turnContext.Activity.From?.Id}, Error={ex.Message}\n{ex.StackTrace}");
             }
 
             try
@@ -45,6 +47,7 @@ namespace WellbeingTeamsBot.Bots
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to store conversation reference for user: {userId}", userId);
+                ManualLogger.Log($"[StoreOrUpdateReferenceAsync failed] userId={userId}, Error={ex.Message}\n{ex.StackTrace}");
             }
 
             var text = turnContext.Activity.Text?.Trim().ToLower();
@@ -99,22 +102,28 @@ namespace WellbeingTeamsBot.Bots
 
         protected override async Task OnInstallationUpdateActivityAsync(ITurnContext<IInstallationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🔥 Bot received installation update activity");
+            _logger.LogInformation("Bot received installation update activity");
 
             if (turnContext.Activity.Conversation.ConversationType == "personal")
             {
                 try
                 {
-                    _logger.LogInformation("✅ Detected personal conversation");
+                    _logger.LogInformation("Detected personal conversation");
+                    ManualLogger.Log("[InstallUpdate] Personal conversation detected.");
 
                     var reference = turnContext.Activity.GetConversationReference();
-                    _logger.LogInformation("✅ Got conversation reference");
+                    _logger.LogInformation("Got conversation reference");
 
                     var objectId = turnContext.Activity.From?.AadObjectId ?? turnContext.Activity.From?.Id;
-                    _logger.LogInformation("✅ Object ID: {objectId}", objectId);
+                    var userName = turnContext.Activity.From?.Name;
+                    var userId = turnContext.Activity.From?.Id;
+
+                    var logEntry = $"[InstallUpdate] App installed by user: {userName}, TeamsId: {userId}, ObjectId: {objectId}";
+                    _logger.LogInformation(logEntry);
+                    ManualLogger.Log(logEntry);
 
                     await _storageHelper.StoreOrUpdateReferenceAsync(objectId, reference);
-                    _logger.LogInformation("✅ Stored reference");
+                    _logger.LogInformation("Stored reference");
 
                     var adaptiveCardJson = @"{
                         ""type"": ""AdaptiveCard"",
@@ -123,7 +132,7 @@ namespace WellbeingTeamsBot.Bots
                         ""body"": [
                             {
                                 ""type"": ""TextBlock"",
-                                ""text"": ""👋 Hi! I'm your Well-being Assistant"",
+                                ""text"": ""Hi! I'm your Well-being Assistant"",
                                 ""weight"": ""Bolder"",
                                 ""size"": ""Medium""
                             },
@@ -157,7 +166,7 @@ namespace WellbeingTeamsBot.Bots
                         ]
                     }";
 
-                    _logger.LogInformation("✅ Parsed adaptive card JSON");
+                    _logger.LogInformation("Parsed adaptive card JSON");
 
                     var attachment = new Attachment
                     {
@@ -165,18 +174,28 @@ namespace WellbeingTeamsBot.Bots
                         Content = JsonConvert.DeserializeObject(adaptiveCardJson)
                     };
 
-                    await turnContext.SendActivityAsync(MessageFactory.Attachment(attachment), cancellationToken);
-                    _logger.LogInformation("✅ Sent welcome card");
+                    try
+                    {
+                        await turnContext.SendActivityAsync(MessageFactory.Attachment(attachment), cancellationToken);
+                        _logger.LogInformation("Sent welcome card");
+                    }
+                    catch (Exception sendEx) when (sendEx.Message.Contains("Forbidden"))
+                    {
+                        ManualLogger.Log("[InstallUpdate] Warning: Received Forbidden during welcome card send, but likely already delivered.");
+                        _logger.LogWarning("Forbidden on card send, but likely already received.");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "💥 Error inside OnInstallationUpdateActivityAsync");
-                    await turnContext.SendActivityAsync(MessageFactory.Text($"💥 Error: {ex.Message}"), cancellationToken);
+                    _logger.LogError(ex, "Error inside OnInstallationUpdateActivityAsync");
+                    ManualLogger.Log($"[InstallUpdate ERROR] {ex.Message}\n{ex.StackTrace}");
+                    await turnContext.SendActivityAsync(MessageFactory.Text($"Error: {ex.Message}"), cancellationToken);
                 }
             }
             else
             {
-                _logger.LogWarning("⚠️ Installation was not in personal scope. Skipping.");
+                _logger.LogWarning("Installation was not in personal scope. Skipping.");
+                ManualLogger.Log("[InstallUpdate] Skipped: not personal scope.");
             }
         }
     }

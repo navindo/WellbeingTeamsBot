@@ -31,38 +31,36 @@ namespace WellbeingTeamsBot.Controllers
         [HttpPost]
         public async Task<IActionResult> SendAdaptiveCard()
         {
-            var logFile = "/home/LogFiles/manual-log.txt";
-
             try
             {
                 using var reader = new StreamReader(Request.Body);
                 var rawBody = await reader.ReadToEndAsync();
-                _logger.LogInformation("📥 RAW REQUEST BODY: {raw}", rawBody);
-                System.IO.File.AppendAllText(logFile, $"[{DateTime.UtcNow:u}] /api/notify called\n");
+                _logger.LogInformation("RAW REQUEST BODY: {raw}", rawBody);
+                ManualLogger.Log("/api/notify called");
 
                 var request = JsonConvert.DeserializeObject<NotifyRequest>(rawBody);
 
                 if (string.IsNullOrWhiteSpace(request.ObjectId) || request.MessageCardJson == null)
                 {
-                    System.IO.File.AppendAllText(logFile, $"[{DateTime.UtcNow:u}] ❌ Missing ObjectId or MessageCardJson\n");
+                    ManualLogger.Log("Missing ObjectId or MessageCardJson in request");
                     return BadRequest("Both objectId and messageCardJson are required.");
                 }
 
-                System.IO.File.AppendAllText(logFile, $"[{DateTime.UtcNow:u}] Sending card to {request.ObjectId}\n");
+                ManualLogger.Log($"Sending card to {request.ObjectId}");
                 await _alertService.SendCardAsync(request.ObjectId, request.MessageCardJson);
                 _logger.LogInformation("Card sent via AlertService to {ObjectId}", request.ObjectId);
-                System.IO.File.AppendAllText(logFile, $"[{DateTime.UtcNow:u}] ✅ Card sent to {request.ObjectId}\n");
+                ManualLogger.Log($"Card sent to {request.ObjectId}");
 
                 await _storageHelper.UpdateLastAlertSentAsync(request.ObjectId);
                 _logger.LogInformation("LastAlertSent timestamp updated for {ObjectId}", request.ObjectId);
-                System.IO.File.AppendAllText(logFile, $"[{DateTime.UtcNow:u}] 📅 LastAlertSent updated for {request.ObjectId}\n");
+                ManualLogger.Log($"LastAlertSent updated for {request.ObjectId}");
 
                 return Ok("Card sent.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to send card");
-                System.IO.File.AppendAllText(logFile, $"[{DateTime.UtcNow:u}] 💥 ERROR: {ex}\n");
+                ManualLogger.Log($"[NotificationController] ERROR while sending card: {ex.Message}\n{ex.StackTrace}");
                 return StatusCode(500, "Internal error while sending card.");
             }
         }
